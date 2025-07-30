@@ -1,25 +1,33 @@
 import streamlit as st
 import joblib
+import os
 
-# Load model and vectorizer
-model = joblib.load("model.joblib")         # or model.pkl
-vectorizer = joblib.load("vectorizer.pkl")  # must match training
+# Title
+st.title("🕵️‍♀️ Fake Job Classifier")
+st.write("Paste a job description below to check if it's real or fake.")
 
-st.title("🕵️‍♀️ Fake Job Posting Classifier")
+# Check if model and vectorizer exist
+if not os.path.exists("model.joblib") or not os.path.exists("vectorizer.pkl"):
+    st.error("❌ Required files `model.joblib` or `vectorizer.pkl` not found. Please upload them.")
+else:
+    try:
+        model = joblib.load("model.joblib")
+        vectorizer = joblib.load("vectorizer.pkl")
 
-job_description = st.text_area("Enter job description:")
+        # Input
+        job_description = st.text_area("✏️ Job Description")
 
-if st.button("Check"):
-    if job_description.strip() == "":
-        st.warning("Please enter a job description.")
-    else:
-        # Vectorize user input
-        job_vec = vectorizer.transform([job_description])
-        
-        # Predict
-        prediction = model.predict(job_vec)[0]
+        if st.button("🔍 Predict"):
+            if job_description.strip() == "":
+                st.warning("Please enter a job description.")
+            else:
+                # Preprocess & predict
+                features = vectorizer.transform([job_description])
+                prediction = model.predict(features)[0]
+                result = "✅ Legit Job" if prediction == 0 else "⚠️ Fake Job Posting"
 
-        if prediction == 1:
-            st.error("🚨 This job is likely FAKE.")
-        else:
-            st.success("✅ This job seems REAL.")
+                st.subheader("Prediction Result:")
+                st.success(result)
+
+    except Exception as e:
+        st.error(f"🚨 Something went wrong: {e}")
