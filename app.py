@@ -1,30 +1,22 @@
+# app.py
 import streamlit as st
-import pickle
+import joblib
 
-# Load model and vectorizer
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
+# Load model
+model = joblib.load("model.pkl")
 
-with open('tfidf.pkl', 'rb') as f:
-    tfidf = pickle.load(f)
+st.title("🕵️ Fake Job Posting Detector")
 
-# App title
-st.title("🕵️‍♀️ Fake Job Posting Detector")
-st.markdown("Paste the job posting below and find out if it's real or fake.")
+job_description = st.text_area("Paste the job description:")
 
-# Text input
-job_text = st.text_area("Job Description", height=300)
-
-if st.button("Check"):
-    if job_text.strip() == "":
-        st.warning("Please enter some job description text.")
+if st.button("Check if it's Fake"):
+    if job_description.strip() == "":
+        st.warning("Please enter a job description.")
     else:
-        # Vectorize input
-        vect_text = tfidf.transform([job_text])
+        prediction = model.predict([job_description])[0]
+        result = "✅ Legitimate Job" if prediction == 0 else "❌ Fake Job"
+        st.success(result)
 
-        # Predict
-        prediction = model.predict(vect_text)[0]
-        proba = model.predict_proba(vect_text)[0]
 
         if prediction == 0:
             st.success(f"✅ This looks like a **REAL** job posting. Confidence: {round(proba[0]*100, 2)}%")
